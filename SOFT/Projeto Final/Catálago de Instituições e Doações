@@ -1,1 +1,169 @@
+// Utilize o site www.plantuml.com, para visualizar o diagrama copie o trecho abaixo direto no site
 
+@startuml
+!theme plain
+
+package "acaosolidaria" {
+  abstract class Usuario {
+    - Long id
+    - String nome
+    - String email
+    - String telefone
+    - String senha
+    - Boolean ativo
+    - Boolean notificacoesAtivas
+    - LocalDateTime dataCriacao
+    - LocalDateTime dataAtualizacao
+    --
+    + Boolean login()
+    + Boolean atualizarCadastro()
+    + void logout()
+  }
+
+  class Voluntario {
+    - String cpf
+    - String disponibilidade
+    - String regiaoPreferencia
+    - String diasSemana
+    - String preferenciaHorario
+    - String tipoServico
+    - Boolean aceitouTermos
+    - Boolean contatoVisivelParaInstituicoes
+    --
+    + Map<String, Object> getPerfilInstituicoes()
+    + Boolean isContatoVisivel()
+    + Boolean cadastrarOfertaVoluntariado(OfertaVoluntariado)
+    + List<Projeto> buscarProjetosAtivos()
+    + Boolean atualizarDisponibilidade()
+  }
+
+  class Instituicao {
+    - String cnpj
+    - String endereco
+    - String areaAtuacao
+    - Boolean cadastroAtivo
+    - String uf
+    - String cidade
+    - String bairro
+    --
+    + List<Voluntario> buscarVoluntarios()
+    + Boolean enviarMensagemParaVoluntario(Long voluntarioId, String mensagem)
+    + Boolean cadastrarPontoColeta(PontoColeta)
+    + Boolean validarCNPJ()
+    + Boolean solicitarVoluntarios(SolicitacaoVoluntarios)
+    + Boolean cadastrarProjeto(Projeto)
+    + List<PontoColeta> getPontosColetaAtivos()
+    + List<Projeto> getProjetosAtivos()
+  }
+
+  class Administrador {
+    --
+    + Boolean ativarCadastroInstituicao(Long instituicaoId)
+    + Boolean editarCadastroUsuario(Long usuarioId)
+    + Boolean excluirCadastroUsuario(Long usuarioId)
+  }
+
+  class Projeto {
+    - Long id
+    - String nome
+    - String descricao
+    - String local
+    - LocalDate data
+    - String duracao
+    - Boolean ativo
+    - String tipoServico
+    --
+    + Boolean atualizarInformacoes()
+    + Boolean ativarProjeto()
+    + Boolean desativarProjeto()
+  }
+
+  class PontoColeta {
+    - Long id
+    - String tipoDoacao
+    - Integer quantidade
+    - String prioridade
+    - LocalDate prazo
+    - Boolean ativo
+  }
+
+  class Mensagem {
+    - Long id
+    - String texto
+    - LocalDateTime dataHora
+    - Long remetenteId
+    - Long destinatarioId
+    - Boolean contatoPermitido
+    --
+    + Boolean enviar()
+    + List<Mensagem> getHistoricoMensagens(Long usuarioId)
+  }
+
+  class Notificacao {
+    - Long id
+    - String tipo
+    - String mensagem
+    - LocalDateTime dataEnvio
+    - Boolean enviada
+    --
+    + Boolean enviarNotificacao()
+  }
+
+  class SolicitacaoVoluntarios {
+    - Long id
+    - String tipoServico
+    - String local
+    - LocalDate data
+    - String duracao
+    - Integer quantidadeVoluntarios
+  }
+
+  class Catalogo {
+    - String filtros
+    --
+    + List<Instituicao> buscarTodasInstituicoes()
+    + List<Instituicao> buscarInstituicoesPorNome(String nome)
+    + List<Instituicao> buscarInstituicoesComProjetos()
+    + List<Instituicao> buscarInstituicoesComPontosColeta()
+    + List<Projeto> buscarProjetosAtivos()
+    + List<PontoColeta> buscarPontosColetaAtivos()
+  }
+}
+
+package "acaosolidaria.factory" {
+  class UsuarioFactory {
+    --
+    + Usuario criarUsuario(String tipo, String nome, String email, String senha)
+    + Voluntario criarVoluntario(String nome, String email, String senha, String cpf)
+    + Instituicao criarInstituicao(String nome, String email, String senha, String cnpj)
+    + Administrador criarAdministrador(String nome, String email, String senha)
+  }
+}
+
+' Heranças
+Usuario <|-- Voluntario
+Usuario <|-- Instituicao
+Usuario <|-- Administrador
+
+' Associações
+Instituicao "1" -- "*" Projeto : gerencia
+Instituicao "1" -- "*" PontoColeta : possui
+Instituicao "1" -- "*" Mensagem : envia/recebe
+Voluntario "1" -- "*" Mensagem : envia/recebe
+Instituicao "1" -- "*" SolicitacaoVoluntarios : realiza
+
+' Relacionamentos muitos-para-muitos
+Projeto "1" -- "*" Voluntario : participa
+
+' Dependências
+Instituicao ..> Voluntario : consulta
+Catalogo ..> Instituicao : consulta
+Catalogo ..> Projeto : consulta
+Catalogo ..> PontoColeta : consulta
+Notificacao --> Usuario : notifica
+Notificacao --> Projeto : relacionada
+UsuarioFactory ..> Usuario : cria
+UsuarioFactory ..> Voluntario : cria
+UsuarioFactory ..> Instituicao : cria
+UsuarioFactory ..> Administrador : cria
+@enduml
